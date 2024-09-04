@@ -10,7 +10,7 @@ CLASS zcl_wasm_f64_load DEFINITION PUBLIC.
         zcx_wasm.
 
     CLASS-METHODS parse
-      IMPORTING !io_body TYPE REF TO zcl_wasm_binary_stream
+      IMPORTING !io_body              TYPE REF TO zcl_wasm_binary_stream
       RETURNING VALUE(ri_instruction) TYPE REF TO zif_wasm_instruction
       RAISING zcx_wasm.
 
@@ -22,9 +22,11 @@ ENDCLASS.
 CLASS zcl_wasm_f64_load IMPLEMENTATION.
 
   METHOD constructor.
+    "##feature-start=debug
     IF iv_align > zcl_wasm_memory=>c_alignment_64bit.
       RAISE EXCEPTION TYPE zcx_wasm EXPORTING text = 'alignment must not be larger than natural'.
     ENDIF.
+    "##feature-end=debug
 
     mv_align  = iv_align.
     mv_offset = iv_offset.
@@ -42,12 +44,14 @@ CLASS zcl_wasm_f64_load IMPLEMENTATION.
     DATA lv_hex TYPE x LENGTH lc_length.
     DATA lv_int TYPE i.
 
-    DATA(lv_i) = io_memory->mi_stack->pop_i32( )->get_signed( ).
+    DATA(lv_i) = io_memory->mi_stack->pop_i32( )->mv_value.
+    "##feature-start=debug
     IF lv_i < 0.
       RAISE EXCEPTION TYPE zcx_wasm EXPORTING text = 'zcl_wasm_f64_load: out of bounds'.
     ENDIF.
+    "##feature-end=debug
 
-    lv_hex = io_memory->get_linear( )->get(
+    lv_hex = io_memory->mi_linear->get(
       iv_length = lc_length
       iv_align  = mv_align
       iv_offset = mv_offset + lv_i ).

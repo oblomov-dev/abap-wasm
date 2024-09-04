@@ -11,18 +11,18 @@ ENDCLASS.
 CLASS cl_spectest IMPLEMENTATION.
 
   METHOD constructor.
-    INSERT 'print' INTO TABLE mt_functions.
-    INSERT 'print_i32' INTO TABLE mt_functions.
-    INSERT 'print_i64' INTO TABLE mt_functions.
-    INSERT 'print_f32' INTO TABLE mt_functions.
-    INSERT 'print_f64' INTO TABLE mt_functions.
-    INSERT 'print_i32_f32' INTO TABLE mt_functions.
-    INSERT 'print_f64_f64' INTO TABLE mt_functions.
+    INSERT |print| INTO TABLE mt_functions.
+    INSERT |print_i32| INTO TABLE mt_functions.
+    INSERT |print_i64| INTO TABLE mt_functions.
+    INSERT |print_f32| INTO TABLE mt_functions.
+    INSERT |print_f64| INTO TABLE mt_functions.
+    INSERT |print_i32_f32| INTO TABLE mt_functions.
+    INSERT |print_f64_f64| INTO TABLE mt_functions.
 
     mo_memory = NEW #( ).
-    mo_memory->set_linear( NEW zcl_wasm_memory_linear(
+    mo_memory->mi_linear = NEW zcl_wasm_memory_linear(
       iv_min = 1
-      iv_max = 2 ) ).
+      iv_max = 2 ).
   ENDMETHOD.
 
   METHOD zif_wasm_module~execute_function_export.

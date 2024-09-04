@@ -3,7 +3,7 @@ CLASS zcl_wasm_select DEFINITION PUBLIC.
     INTERFACES zif_wasm_instruction.
 
     CLASS-METHODS parse
-      IMPORTING !io_body TYPE REF TO zcl_wasm_binary_stream
+      IMPORTING !io_body              TYPE REF TO zcl_wasm_binary_stream
       RETURNING VALUE(ri_instruction) TYPE REF TO zif_wasm_instruction.
 ENDCLASS.
 
@@ -30,7 +30,7 @@ CLASS zcl_wasm_select IMPLEMENTATION.
       RAISE EXCEPTION TYPE zcx_wasm EXPORTING text = 'select: expected same type'.
     ENDIF.
 
-    IF lo_c->get_signed( ) = 0.
+    IF lo_c->mv_value = 0.
       io_memory->mi_stack->push( lo_val1 ).
     ELSE.
       io_memory->mi_stack->push( lo_val2 ).

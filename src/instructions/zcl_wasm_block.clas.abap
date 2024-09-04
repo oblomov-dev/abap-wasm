@@ -9,7 +9,7 @@ CLASS zcl_wasm_block DEFINITION PUBLIC.
 
     CLASS-METHODS parse
       IMPORTING
-        io_body TYPE REF TO zcl_wasm_binary_stream
+        io_body               TYPE REF TO zcl_wasm_binary_stream
       RETURNING
         VALUE(ri_instruction) TYPE REF TO zif_wasm_instruction
       RAISING
@@ -43,9 +43,11 @@ CLASS zcl_wasm_block IMPLEMENTATION.
         ev_last_opcode  = DATA(lv_last_opcode)
         et_instructions = DATA(lt_instructions) ).
 
+    "##feature-start=debug
     IF lv_last_opcode <> zif_wasm_opcodes=>c_opcodes-end.
       RAISE EXCEPTION TYPE zcx_wasm EXPORTING text = |block, expected end|.
     ENDIF.
+    "##feature-end=debug
 
     ri_instruction = NEW zcl_wasm_block(
       iv_block_type   = lv_block_type
@@ -62,17 +64,22 @@ CLASS zcl_wasm_block IMPLEMENTATION.
       io_module     = io_module ).
     lo_block->start( io_memory ).
 
-    TRY.
-        rv_control = io_module->execute_instructions( mt_instructions ).
+    io_module->execute_instructions(
+          EXPORTING
+            it_instructions = mt_instructions
+          CHANGING
+            cs_control      = cs_control ).
 
-        IF rv_control = zif_wasm_instruction=>c_control-return_.
-          RETURN.
-        ENDIF.
-      CATCH zcx_wasm_branch INTO DATA(lx_branch).
-        IF lx_branch->depth > 0.
-          RAISE EXCEPTION TYPE zcx_wasm_branch EXPORTING depth = lx_branch->depth - 1.
-        ENDIF.
-    ENDTRY.
+    IF cs_control-control = zif_wasm_instruction=>c_control-return_.
+      RETURN.
+    ELSEIF cs_control-control = zif_wasm_instruction=>c_control-branch.
+      IF cs_control-depth > 0.
+        cs_control-depth = cs_control-depth - 1.
+        RETURN.
+      ELSE.
+        CLEAR cs_control-control.
+      ENDIF.
+    ENDIF.
 
     lo_block->end( io_memory ).
 

@@ -2,7 +2,7 @@ CLASS zcl_wasm_memory_section DEFINITION PUBLIC.
   PUBLIC SECTION.
     CLASS-METHODS parse
       IMPORTING
-        !io_body          TYPE REF TO zcl_wasm_binary_stream
+        !io_body         TYPE REF TO zcl_wasm_binary_stream
       RETURNING
         VALUE(ro_memory) TYPE REF TO zcl_wasm_memory_section
       RAISING
@@ -11,8 +11,8 @@ CLASS zcl_wasm_memory_section DEFINITION PUBLIC.
     METHODS constructor
       IMPORTING
         iv_has_memory TYPE abap_bool OPTIONAL
-        iv_min TYPE int8 OPTIONAL
-        iv_max TYPE int8 OPTIONAL.
+        iv_min        TYPE int8 OPTIONAL
+        iv_max        TYPE int8 OPTIONAL.
 
     METHODS instantiate
       IMPORTING
@@ -64,8 +64,8 @@ CLASS zcl_wasm_memory_section IMPLEMENTATION.
 
     IF lv_max < lv_min.
       RAISE EXCEPTION TYPE zcx_wasm EXPORTING text = |size minimum must not be greater than maximum|.
-    ELSEIF lv_max > zif_wasm_memory_linear=>c_max_pages.
-      RAISE EXCEPTION TYPE zcx_wasm EXPORTING text = |memory size must be at most { zif_wasm_memory_linear=>c_max_pages } pages (4GiB)|.
+    ELSEIF lv_max > zcl_wasm_memory_linear=>c_max_pages.
+      RAISE EXCEPTION TYPE zcx_wasm EXPORTING text = |memory size must be at most { zcl_wasm_memory_linear=>c_max_pages } pages (4GiB)|.
     ENDIF.
 
     ro_memory = NEW #(
@@ -82,12 +82,12 @@ CLASS zcl_wasm_memory_section IMPLEMENTATION.
         iv_min = mv_min
         iv_max = mv_max ).
 
-      IF io_memory->has_linear( ) = abap_true.
+      IF io_memory->mi_linear IS NOT INITIAL.
 * it can be imported
         RAISE EXCEPTION TYPE zcx_wasm EXPORTING text = |memory section: memory already instantiated|.
       ENDIF.
 
-      io_memory->set_linear( lo_linear ).
+      io_memory->mi_linear = lo_linear.
     ENDIF.
 
   ENDMETHOD.

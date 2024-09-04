@@ -3,7 +3,7 @@ CLASS zcl_wasm_i32_extend8_s DEFINITION PUBLIC.
     INTERFACES zif_wasm_instruction.
 
     CLASS-METHODS parse
-      IMPORTING !io_body TYPE REF TO zcl_wasm_binary_stream
+      IMPORTING !io_body              TYPE REF TO zcl_wasm_binary_stream
       RETURNING VALUE(ri_instruction) TYPE REF TO zif_wasm_instruction.
   PRIVATE SECTION.
     CLASS-DATA gi_singleton TYPE REF TO zif_wasm_instruction.
@@ -25,7 +25,7 @@ CLASS zcl_wasm_i32_extend8_s IMPLEMENTATION.
     DATA lv_hex     TYPE x LENGTH 4.
     DATA lv_overlay TYPE x LENGTH 4 VALUE 'FFFFFF00'.
 
-    lv_hex = io_memory->mi_stack->pop_i32( )->get_signed( ).
+    lv_hex = io_memory->mi_stack->pop_i32( )->mv_value.
 
     GET BIT 25 OF lv_hex INTO DATA(lv_sign).
     IF lv_sign = 1.

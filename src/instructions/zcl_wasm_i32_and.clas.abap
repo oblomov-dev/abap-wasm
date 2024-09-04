@@ -3,7 +3,7 @@ CLASS zcl_wasm_i32_and DEFINITION PUBLIC.
     INTERFACES zif_wasm_instruction.
 
     CLASS-METHODS parse
-      IMPORTING !io_body TYPE REF TO zcl_wasm_binary_stream
+      IMPORTING !io_body              TYPE REF TO zcl_wasm_binary_stream
       RETURNING VALUE(ri_instruction) TYPE REF TO zif_wasm_instruction.
   PRIVATE SECTION.
     CLASS-DATA gi_singleton TYPE REF TO zif_wasm_instruction.
@@ -21,13 +21,14 @@ CLASS zcl_wasm_i32_and IMPLEMENTATION.
   METHOD zif_wasm_instruction~execute.
     DATA lv_hex1 TYPE x LENGTH 4.
     DATA lv_hex2 TYPE x LENGTH 4.
+    DATA lv_val1 TYPE i.
 
+    "##feature-start=debug
     ASSERT io_memory->mi_stack->get_length( ) >= 2.
+    "##feature-end=debug
 
-    DATA(lv_val1) = CAST zcl_wasm_i32( io_memory->mi_stack->pop( ) )->get_signed( ).
-    DATA(lv_val2) = CAST zcl_wasm_i32( io_memory->mi_stack->pop( ) )->get_signed( ).
-    lv_hex1 = lv_val1.
-    lv_hex2 = lv_val2.
+    lv_hex1 = CAST zcl_wasm_i32( io_memory->mi_stack->pop( ) )->mv_value.
+    lv_hex2 = CAST zcl_wasm_i32( io_memory->mi_stack->pop( ) )->mv_value.
 
     lv_hex1 = lv_hex1 BIT-AND lv_hex2.
     lv_val1 = lv_hex1.

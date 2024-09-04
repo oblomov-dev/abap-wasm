@@ -9,7 +9,7 @@ CLASS zcl_wasm_call DEFINITION PUBLIC.
 
     CLASS-METHODS parse
       IMPORTING
-        !io_body TYPE REF TO zcl_wasm_binary_stream
+        !io_body              TYPE REF TO zcl_wasm_binary_stream
       RETURNING
         VALUE(ri_instruction) TYPE REF TO zif_wasm_instruction
       RAISING
@@ -42,6 +42,7 @@ CLASS zcl_wasm_call IMPLEMENTATION.
 
     DATA lt_parameters TYPE zif_wasm_value=>ty_values.
     DATA lt_results    TYPE STANDARD TABLE OF REF TO zif_wasm_value WITH EMPTY KEY.
+    DATA ls_control    TYPE zif_wasm_instruction=>ty_control.
 
     DATA(ls_function) = io_module->get_function_by_index( iv_funcidx ).
 *    WRITE: / |call funcidx { iv_funcidx }|.
@@ -67,10 +68,10 @@ CLASS zcl_wasm_call IMPLEMENTATION.
       DATA(lr_code) = io_module->get_code_by_index( CONV #( ls_function-codeidx ) ).
 
 * consume values from stack into locals
-      io_memory->push_frame( ).
+      io_memory->push_locals( ).
       DO xstrlen( ls_type-parameter_types ) TIMES.
 * todo: check parameters types are correct
-        io_memory->get_frame( )->local_push_first( io_memory->mi_stack->pop( ) ).
+        INSERT io_memory->mi_stack->pop( ) INTO io_memory->mt_locals INDEX 1.
       ENDDO.
 
 * add the locals for the function
@@ -78,13 +79,13 @@ CLASS zcl_wasm_call IMPLEMENTATION.
         DO <ls_local>-count TIMES.
           CASE <ls_local>-type.
             WHEN zif_wasm_types=>c_value_type-i32.
-              io_memory->get_frame( )->local_push_last( NEW zcl_wasm_i32( ) ).
+              INSERT NEW zcl_wasm_i32( ) INTO TABLE io_memory->mt_locals.
             WHEN zif_wasm_types=>c_value_type-i64.
-              io_memory->get_frame( )->local_push_last( NEW zcl_wasm_i64( ) ).
+              INSERT NEW zcl_wasm_i64( ) INTO TABLE io_memory->mt_locals.
             WHEN zif_wasm_types=>c_value_type-f32.
-              io_memory->get_frame( )->local_push_last( NEW zcl_wasm_f32( ) ).
+              INSERT NEW zcl_wasm_f32( ) INTO TABLE io_memory->mt_locals.
             WHEN zif_wasm_types=>c_value_type-f64.
-              io_memory->get_frame( )->local_push_last( NEW zcl_wasm_f64( ) ).
+              INSERT NEW zcl_wasm_f64( ) INTO TABLE io_memory->mt_locals.
             WHEN OTHERS.
               RAISE EXCEPTION TYPE zcx_wasm EXPORTING text = |call: unknown type|.
           ENDCASE.
@@ -94,13 +95,14 @@ CLASS zcl_wasm_call IMPLEMENTATION.
       DATA(li_old_stack) = io_memory->mi_stack.
       io_memory->mi_stack = CAST zif_wasm_memory_stack( NEW zcl_wasm_memory_stack( ) ).
 
-      TRY.
-          io_module->execute_instructions( lr_code->instructions ).
-        CATCH zcx_wasm_branch INTO DATA(lx_branch).
-          IF lx_branch->depth > 0.
-            RAISE EXCEPTION TYPE zcx_wasm EXPORTING text = 'call(), branching exception, should not happen'.
-          ENDIF.
-      ENDTRY.
+      io_module->execute_instructions(
+            EXPORTING
+              it_instructions = lr_code->instructions
+            CHANGING
+              cs_control      = ls_control ).
+      IF ls_control-depth > 0.
+        RAISE EXCEPTION TYPE zcx_wasm EXPORTING text = 'call(), branching, should not happen'.
+      ENDIF.
 
 ******************
 
@@ -132,7 +134,7 @@ CLASS zcl_wasm_call IMPLEMENTATION.
       ENDLOOP.
 
       io_memory->mi_stack = li_old_stack.
-      io_memory->pop_frame( ).
+      io_memory->pop_locals( ).
     ENDIF.
 
   ENDMETHOD.

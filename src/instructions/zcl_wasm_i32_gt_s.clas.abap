@@ -3,7 +3,7 @@ CLASS zcl_wasm_i32_gt_s DEFINITION PUBLIC.
     INTERFACES zif_wasm_instruction.
 
     CLASS-METHODS parse
-      IMPORTING !io_body TYPE REF TO zcl_wasm_binary_stream
+      IMPORTING !io_body              TYPE REF TO zcl_wasm_binary_stream
       RETURNING VALUE(ri_instruction) TYPE REF TO zif_wasm_instruction.
   PRIVATE SECTION.
     CLASS-DATA gi_singleton TYPE REF TO zif_wasm_instruction.
@@ -26,12 +26,12 @@ CLASS zcl_wasm_i32_gt_s IMPLEMENTATION.
     DATA(lo_val1) = CAST zcl_wasm_i32( io_memory->mi_stack->pop( ) ).
     DATA(lo_val2) = CAST zcl_wasm_i32( io_memory->mi_stack->pop( ) ).
 
-    DATA(lv_result) = 0.
-    IF lo_val1->get_signed( ) < lo_val2->get_signed( ).
-      lv_result = 1.
+    IF lo_val1->mv_value < lo_val2->mv_value.
+      io_memory->mi_stack->push( zcl_wasm_i32=>gc_one ).
+    ELSE.
+      io_memory->mi_stack->push( zcl_wasm_i32=>gc_zero ).
     ENDIF.
 
-    io_memory->mi_stack->push( zcl_wasm_i32=>from_signed( lv_result ) ).
   ENDMETHOD.
 
 ENDCLASS.

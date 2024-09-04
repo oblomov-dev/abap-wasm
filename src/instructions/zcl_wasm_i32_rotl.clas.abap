@@ -4,7 +4,7 @@ CLASS zcl_wasm_i32_rotl DEFINITION PUBLIC.
 
     CLASS-METHODS parse
       IMPORTING
-        !io_body TYPE REF TO zcl_wasm_binary_stream
+        !io_body              TYPE REF TO zcl_wasm_binary_stream
       RETURNING
         VALUE(ri_instruction) TYPE REF TO zif_wasm_instruction.
   PRIVATE SECTION.
@@ -29,8 +29,8 @@ CLASS zcl_wasm_i32_rotl IMPLEMENTATION.
     DATA lv_offset TYPE i.
 
     DATA(li_stack) = io_memory->mi_stack.
-    DATA(lv_bits) = li_stack->pop_i32( )->get_signed( ) MOD 32.
-    lv_hex = li_stack->pop_i32( )->get_signed( ).
+    DATA(lv_bits) = li_stack->pop_i32( )->mv_value MOD 32.
+    lv_hex = li_stack->pop_i32( )->mv_value.
 
     DATA(lv_bytes) = lv_bits DIV 8.
     lv_bits = lv_bits MOD 8.

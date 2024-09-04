@@ -3,7 +3,7 @@ CLASS zcl_wasm_i64_add DEFINITION PUBLIC.
     INTERFACES zif_wasm_instruction.
 
     CLASS-METHODS parse
-      IMPORTING !io_body TYPE REF TO zcl_wasm_binary_stream
+      IMPORTING !io_body              TYPE REF TO zcl_wasm_binary_stream
       RETURNING VALUE(ri_instruction) TYPE REF TO zif_wasm_instruction.
   PRIVATE SECTION.
     CLASS-DATA gi_singleton TYPE REF TO zif_wasm_instruction.
@@ -22,14 +22,11 @@ CLASS zcl_wasm_i64_add IMPLEMENTATION.
 * wasm does C style overflows, but ABAP dumps, so split up the addition into multiple safe parts
 * addition of 2 bytes at a time, arithmetics are typically 4 bytes in ABAP
 
-    DATA lv_hex1 TYPE x LENGTH 8.
-    DATA lv_hex2 TYPE x LENGTH 8.
+    DATA lv_hex1   TYPE x LENGTH 8.
+    DATA lv_hex2   TYPE x LENGTH 8.
     DATA lv_result TYPE x LENGTH 8.
-    DATA lv_int8 TYPE int8.
-
-    DATA lv_carry TYPE x LENGTH 4.
-    DATA lv_word1 TYPE x LENGTH 4.
-    DATA lv_word2 TYPE x LENGTH 4.
+    DATA lv_int8   TYPE int8.
+    DATA lv_carry  TYPE x LENGTH 4.
 
     lv_hex1 = io_memory->mi_stack->pop_i64( )->get_signed( ).
     lv_hex2 = io_memory->mi_stack->pop_i64( )->get_signed( ).

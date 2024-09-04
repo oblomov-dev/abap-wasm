@@ -7,7 +7,7 @@ CLASS zcl_wasm_table_grow DEFINITION PUBLIC.
         iv_tableidx TYPE int8.
 
     CLASS-METHODS parse
-      IMPORTING !io_body TYPE REF TO zcl_wasm_binary_stream
+      IMPORTING !io_body              TYPE REF TO zcl_wasm_binary_stream
       RETURNING VALUE(ri_instruction) TYPE REF TO zif_wasm_instruction
       RAISING zcx_wasm.
   PRIVATE SECTION.
@@ -30,7 +30,7 @@ CLASS zcl_wasm_table_grow IMPLEMENTATION.
 
     DATA(lv_sz) = io_memory->table_size( CONV #( mv_tableidx ) ).
 
-    DATA(lv_n) = io_memory->mi_stack->pop_i32( )->get_signed( ).
+    DATA(lv_n) = io_memory->mi_stack->pop_i32( )->mv_value.
     DATA(lv_val) = io_memory->mi_stack->pop( ).
 
     DATA(lv_max) = io_memory->table_get_max( CONV #( mv_tableidx ) ).

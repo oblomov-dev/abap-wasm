@@ -7,7 +7,7 @@ CLASS zcl_wasm_br DEFINITION PUBLIC.
     INTERFACES zif_wasm_instruction.
 
     CLASS-METHODS parse
-      IMPORTING !io_body TYPE REF TO zcl_wasm_binary_stream
+      IMPORTING !io_body              TYPE REF TO zcl_wasm_binary_stream
       RETURNING VALUE(ri_instruction) TYPE REF TO zif_wasm_instruction
       RAISING zcx_wasm.
 
@@ -33,8 +33,8 @@ CLASS zcl_wasm_br IMPLEMENTATION.
     " WRITE / '@KERNEL console.dir(lv_len);'.
     " WRITE / '@KERNEL console.dir(this.mv_labelidx);'.
 
-* yea, using exceptions for branching is probably slow, but will work for now
-    RAISE EXCEPTION TYPE zcx_wasm_branch EXPORTING depth = mv_labelidx.
+    cs_control-control = zif_wasm_instruction=>c_control-branch.
+    cs_control-depth = mv_labelidx.
   ENDMETHOD.
 
 ENDCLASS.

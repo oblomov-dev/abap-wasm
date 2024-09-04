@@ -10,7 +10,7 @@ CLASS zcl_wasm_if DEFINITION PUBLIC.
 
     CLASS-METHODS parse
       IMPORTING
-        !io_body TYPE REF TO zcl_wasm_binary_stream
+        !io_body              TYPE REF TO zcl_wasm_binary_stream
       RETURNING
         VALUE(ri_instruction) TYPE REF TO zif_wasm_instruction
       RAISING
@@ -49,9 +49,11 @@ CLASS zcl_wasm_if IMPLEMENTATION.
           et_instructions = DATA(lt_in2) ).
     ENDIF.
 
+    "##feature-start=debug
     IF lv_last_opcode <> zif_wasm_opcodes=>c_opcodes-end.
       RAISE EXCEPTION TYPE zcx_wasm EXPORTING text = |if parse: expected end|.
     ENDIF.
+    "##feature-end=debug
 
     ri_instruction = NEW zcl_wasm_if(
       iv_block_type = lv_block_type
@@ -66,28 +68,38 @@ CLASS zcl_wasm_if IMPLEMENTATION.
 * https://webassembly.github.io/spec/core/binary/instructions.html#control-instructions
 * https://webassembly.github.io/spec/core/binary/instructions.html#binary-blocktype
 
-    DATA(lv_value) = io_memory->mi_stack->pop_i32( )->get_signed( ).
+    DATA(lv_value) = io_memory->mi_stack->pop_i32( )->mv_value.
 
     DATA(lo_block) = NEW zcl_wasm_block_helper(
       iv_block_type = mv_block_type
       io_module     = io_module ).
     lo_block->start( io_memory ).
 
-    TRY.
 * If c is non-zero, then enter
-        IF lv_value <> 0.
-          rv_control = io_module->execute_instructions( mt_in1 ).
-        ELSE.
-          rv_control = io_module->execute_instructions( mt_in2 ).
-        ENDIF.
-        IF rv_control = zif_wasm_instruction=>c_control-return_.
-          RETURN.
-        ENDIF.
-      CATCH zcx_wasm_branch INTO DATA(lx_branch).
-        IF lx_branch->depth > 0.
-          RAISE EXCEPTION TYPE zcx_wasm_branch EXPORTING depth = lx_branch->depth - 1.
-        ENDIF.
-    ENDTRY.
+    IF lv_value <> 0.
+      io_module->execute_instructions(
+            EXPORTING
+              it_instructions = mt_in1
+            CHANGING
+              cs_control      = cs_control ).
+    ELSE.
+      io_module->execute_instructions(
+            EXPORTING
+              it_instructions = mt_in2
+            CHANGING
+              cs_control      = cs_control ).
+    ENDIF.
+
+    IF cs_control-control = zif_wasm_instruction=>c_control-return_.
+      RETURN.
+    ELSEIF cs_control-control = zif_wasm_instruction=>c_control-branch.
+      IF cs_control-depth > 0.
+        cs_control-depth = cs_control-depth - 1.
+        RETURN.
+      ELSE.
+        CLEAR cs_control-control.
+      ENDIF.
+    ENDIF.
 
     lo_block->end( io_memory ).
 

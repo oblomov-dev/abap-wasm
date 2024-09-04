@@ -119,12 +119,17 @@ CLASS zcl_wasm_data_section IMPLEMENTATION.
 * An active data segment copies its contents into a memory during instantiation
 * In the current version of WebAssembly, at most one memory is allowed in a module.
 
+    DATA ls_control TYPE zif_wasm_instruction=>ty_control.
+
     LOOP AT mt_active INTO DATA(ls_active).
       TRY.
           LOOP AT ls_active-instructions INTO DATA(lo_instruction).
             lo_instruction->execute(
-              io_memory = io_memory
-              io_module = NEW zcl_wasm_module( ) ).
+              EXPORTING
+                io_memory  = io_memory
+                io_module  = NEW zcl_wasm_module( )
+              CHANGING
+                cs_control = ls_control ).
           ENDLOOP.
         CATCH cx_static_check INTO DATA(lx_error).
           RAISE EXCEPTION TYPE zcx_wasm EXPORTING text = |instantiate data, failed to execute instructions: { lx_error->get_text( ) }|.
@@ -132,12 +137,12 @@ CLASS zcl_wasm_data_section IMPLEMENTATION.
 
       DATA(lv_offset) = io_memory->mi_stack->pop_i32( )->get_unsigned( ).
 
-      IF io_memory->has_linear( ) = abap_false.
+      IF io_memory->mi_linear IS INITIAL.
         RAISE EXCEPTION TYPE zcx_wasm EXPORTING text = |instantiate data, no linear memory|.
       ENDIF.
 
       " WRITE / |active data, offset { lv_offset }|.
-      io_memory->get_linear( )->set(
+      io_memory->mi_linear->set(
         iv_offset = lv_offset
         iv_bytes  = ls_active-bytes ).
     ENDLOOP.

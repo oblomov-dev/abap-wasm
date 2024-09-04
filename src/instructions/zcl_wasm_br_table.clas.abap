@@ -11,7 +11,7 @@ CLASS zcl_wasm_br_table DEFINITION PUBLIC.
 
     CLASS-METHODS parse
       IMPORTING
-        !io_body TYPE REF TO zcl_wasm_binary_stream
+        !io_body              TYPE REF TO zcl_wasm_binary_stream
       RETURNING
         VALUE(ri_instruction) TYPE REF TO zif_wasm_instruction
         RAISING zcx_wasm.
@@ -57,7 +57,7 @@ CLASS zcl_wasm_br_table IMPLEMENTATION.
     "##feature-end=debug
 
 * todo, this has to be get_unsigned() ?
-    DATA(lv_i) = CAST zcl_wasm_i32( li_value )->get_signed( ).
+    DATA(lv_i) = CAST zcl_wasm_i32( li_value )->mv_value.
     lv_i = lv_i + 1.
 
     READ TABLE mt_branches INDEX lv_i INTO DATA(lv_branch).
@@ -65,7 +65,8 @@ CLASS zcl_wasm_br_table IMPLEMENTATION.
       lv_branch = mv_default.
     ENDIF.
 
-    RAISE EXCEPTION TYPE zcx_wasm_branch EXPORTING depth = lv_branch.
+    cs_control-control = zif_wasm_instruction=>c_control-branch.
+    cs_control-depth = lv_branch.
   ENDMETHOD.
 
 ENDCLASS.

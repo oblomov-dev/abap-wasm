@@ -3,7 +3,7 @@ CLASS zcl_wasm_i32_shr_s DEFINITION PUBLIC.
     INTERFACES zif_wasm_instruction.
 
     CLASS-METHODS parse
-      IMPORTING !io_body TYPE REF TO zcl_wasm_binary_stream
+      IMPORTING !io_body              TYPE REF TO zcl_wasm_binary_stream
       RETURNING VALUE(ri_instruction) TYPE REF TO zif_wasm_instruction.
   PRIVATE SECTION.
     CLASS-DATA gi_singleton TYPE REF TO zif_wasm_instruction.
@@ -22,10 +22,10 @@ CLASS zcl_wasm_i32_shr_s IMPLEMENTATION.
 * https://webassembly.github.io/spec/core/exec/numerics.html#xref-exec-numerics-op-ishr-s-mathrm-ishr-s-n-i-1-i-2
 * shift right signed
 
-    DATA(lv_count) = io_memory->mi_stack->pop_i32( )->get_signed( ) MOD 32.
+    DATA(lv_count) = io_memory->mi_stack->pop_i32( )->mv_value MOD 32.
 
     DATA(li_val) = io_memory->mi_stack->pop_i32( ).
-    DATA(lv_int) = li_val->get_signed( ).
+    DATA(lv_int) = li_val->mv_value.
 
     IF lv_count = 0.
       io_memory->mi_stack->push( li_val ).

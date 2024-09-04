@@ -42,15 +42,15 @@ CLASS cl_scrypt IMPLEMENTATION.
           iv_name       = 'run'
           it_parameters = VALUE #( ( lo_retptr ) ) ).
 
-        DATA(li_linear) = li_wasm->get_memory( )->get_linear( ).
+        DATA(li_linear) = li_wasm->get_memory( )->mi_linear.
         DATA(lv_realptr) = li_linear->get(
           iv_length = 4
-          iv_offset = lo_retptr->get_signed( ) ).
+          iv_offset = CONV #( lo_retptr->mv_value ) ).
         " WRITE / lv_realptr.
 
         DATA(lv_reallen) = li_linear->get(
           iv_length = 4
-          iv_offset = lo_retptr->get_signed( ) + 4 ).
+          iv_offset = lo_retptr->mv_value + 4 ).
         " WRITE / lv_reallen.
 
         DATA(lv_return) = li_linear->get(

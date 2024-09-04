@@ -7,7 +7,7 @@ CLASS zcl_wasm_br_if DEFINITION PUBLIC.
     INTERFACES zif_wasm_instruction.
 
     CLASS-METHODS parse
-      IMPORTING !io_body TYPE REF TO zcl_wasm_binary_stream
+      IMPORTING !io_body              TYPE REF TO zcl_wasm_binary_stream
       RETURNING VALUE(ri_instruction) TYPE REF TO zif_wasm_instruction
       RAISING zcx_wasm.
 
@@ -39,12 +39,12 @@ CLASS zcl_wasm_br_if IMPLEMENTATION.
     ENDIF.
     "##feature-end=debug
 
-    IF CAST zcl_wasm_i32( li_value )->get_signed( ) = 0.
+    IF CAST zcl_wasm_i32( li_value )->mv_value = 0.
       RETURN.
     ENDIF.
 
-* yea, using exceptions for branching is probably slow, but will work for now
-    RAISE EXCEPTION TYPE zcx_wasm_branch EXPORTING depth = mv_labelidx.
+    cs_control-control = zif_wasm_instruction=>c_control-branch.
+    cs_control-depth = mv_labelidx.
   ENDMETHOD.
 
 ENDCLASS.

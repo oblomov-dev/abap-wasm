@@ -15,7 +15,7 @@ CLASS zcl_wasm_module DEFINITION
       ty_types TYPE STANDARD TABLE OF ty_type WITH DEFAULT KEY .
     TYPES: BEGIN OF ty_local,
               count TYPE i,
-              type TYPE zif_wasm_types=>ty_valtype ,
+              type  TYPE zif_wasm_types=>ty_valtype ,
            END OF ty_local.
     TYPES: ty_locals TYPE STANDARD TABLE OF ty_local WITH DEFAULT KEY.
 
@@ -103,11 +103,10 @@ CLASS zcl_wasm_module DEFINITION
     METHODS execute_instructions
       IMPORTING
         !it_instructions TYPE zif_wasm_instruction=>ty_list
-      RETURNING
-        VALUE(rv_control) TYPE zif_wasm_instruction=>ty_control
+      CHANGING
+        cs_control       TYPE zif_wasm_instruction=>ty_control
       RAISING
-        zcx_wasm
-        zcx_wasm_branch.
+        zcx_wasm.
 
     METHODS register_imports
       IMPORTING
@@ -115,7 +114,7 @@ CLASS zcl_wasm_module DEFINITION
 * throws if not found
     METHODS get_import_by_module_name
       IMPORTING
-        !iv_module_name TYPE string
+        !iv_module_name  TYPE string
       RETURNING
         VALUE(ri_module) TYPE REF TO zif_wasm_module
       RAISING
@@ -359,16 +358,10 @@ CLASS zcl_wasm_module IMPLEMENTATION.
       mo_memory->mi_stack->push( li_value ).
     ENDLOOP.
 
-    TRY.
-        zcl_wasm_call=>invoke(
-          iv_funcidx = ls_export-index
-          io_memory  = mo_memory
-          io_module  = me ).
-      CATCH zcx_wasm_branch.
-        RAISE EXCEPTION TYPE zcx_wasm
-          EXPORTING
-            text = 'call(), branching exception, should not happen'.
-    ENDTRY.
+    zcl_wasm_call=>invoke(
+      iv_funcidx = ls_export-index
+      io_memory  = mo_memory
+      io_module  = me ).
 
     DO xstrlen( ls_type-result_types ) TIMES.
       INSERT mo_memory->mi_stack->pop( ) INTO rt_results INDEX 1.
@@ -379,11 +372,14 @@ CLASS zcl_wasm_module IMPLEMENTATION.
   METHOD execute_instructions.
     LOOP AT it_instructions ASSIGNING FIELD-SYMBOL(<li_instruction>).
       " WRITE / '@KERNEL console.dir(fs_li_instruction_.get().constructor.name);'.
-      rv_control = <li_instruction>->execute(
-        io_memory = mo_memory
-        io_module = me ).
+      <li_instruction>->execute(
+        EXPORTING
+          io_memory  = mo_memory
+          io_module  = me
+        CHANGING
+          cs_control = cs_control ).
 
-      IF rv_control = zif_wasm_instruction=>c_control-return_.
+      IF cs_control-control IS NOT INITIAL.
         RETURN.
       ENDIF.
     ENDLOOP.

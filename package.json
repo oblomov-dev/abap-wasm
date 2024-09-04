@@ -9,7 +9,8 @@
     "jsonschema": "echo RUNNING jsonschema && node test/jsonschema.mjs",
     "sha256": "echo RUNNING SHA256 && node test/sha256.mjs",
     "performance": "echo RUNNING Performance && node test/performance.mjs",
-    "unit": "rm -rf output && abap_transpile && echo RUNNING UNIT TEST && node output/index.mjs",
+    "transpile": "rm -rf output && abap_transpile && sed -i 's/new abap.types.Hex({length: 65536})/new abap.types.HexUInt8({length: 65536})/g' output/zcl_wasm_memory_linear.clas.mjs",
+    "unit": "npm run transpile && echo RUNNING UNIT TEST && node output/index.mjs",
     "lint": "abaplint",
     "build-release": "node test/build-release.mjs",
     "flame-graph-testsuite": "0x -o test/testsuite.mjs",
@@ -23,10 +24,10 @@
   "author": "Lars Hvam Petersen",
   "license": "MIT",
   "dependencies": {
-    "@abaplint/cli": "^2.106.3",
-    "@abaplint/runtime": "^2.8.19",
+    "@abaplint/cli": "^2.110.6",
+    "@abaplint/runtime": "^2.10.5",
     "0x": "^5.7.0",
-    "@abaplint/transpiler-cli": "^2.8.19"
+    "@abaplint/transpiler-cli": "^2.10.5"
   },
   "devDependencies": {
     "@jitl/quickjs-wasmfile-debug-sync": "^0.29.1",

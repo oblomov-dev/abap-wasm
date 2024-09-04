@@ -3,7 +3,7 @@ CLASS zcl_wasm_memory_copy DEFINITION PUBLIC.
     INTERFACES zif_wasm_instruction.
 
     CLASS-METHODS parse
-      IMPORTING !io_body TYPE REF TO zcl_wasm_binary_stream
+      IMPORTING !io_body              TYPE REF TO zcl_wasm_binary_stream
       RETURNING VALUE(ri_instruction) TYPE REF TO zif_wasm_instruction.
 ENDCLASS.
 
@@ -23,7 +23,7 @@ CLASS zcl_wasm_memory_copy IMPLEMENTATION.
     DATA(lv_source) = io_memory->mi_stack->pop_i32( )->get_unsigned( ).
     DATA(lv_destination) = io_memory->mi_stack->pop_i32( )->get_unsigned( ).
 
-    DATA(li_linear) = io_memory->get_linear( ).
+    DATA(li_linear) = io_memory->mi_linear.
     IF lv_source + lv_number > li_linear->size_in_bytes( )
         OR lv_destination + lv_number > li_linear->size_in_bytes( ).
       RAISE EXCEPTION TYPE zcx_wasm EXPORTING text = 'zcl_wasm_memory_copy: out of bounds memory access'.

@@ -12,16 +12,15 @@ CLASS zcl_wasm_memory DEFINITION
     METHODS constructor.
 
 *********** STACK
-* public for optimizing performance
     DATA mi_stack TYPE REF TO zif_wasm_memory_stack.
 
-*********** Frames with locals
-    METHODS push_frame.
-    METHODS get_frame
-      RETURNING
-        VALUE(ri_frame) TYPE REF TO zif_wasm_memory_frame
-      RAISING zcx_wasm.
-    METHODS pop_frame
+*********** LOCALS
+    TYPES ty_locals TYPE STANDARD TABLE OF REF TO zif_wasm_value WITH DEFAULT KEY.
+    DATA mt_locals TYPE ty_locals.
+
+    METHODS push_locals.
+
+    METHODS pop_locals
       RAISING zcx_wasm.
 
 *********** GLOBAL
@@ -32,19 +31,7 @@ CLASS zcl_wasm_memory DEFINITION
         zcx_wasm.
 
 *********** DEFAULT LINEAR
-    METHODS get_linear
-      RETURNING
-        VALUE(ri_linear) TYPE REF TO zif_wasm_memory_linear
-      RAISING
-        zcx_wasm.
-
-    METHODS set_linear
-      IMPORTING
-        ii_linear TYPE REF TO zif_wasm_memory_linear.
-
-    METHODS has_linear
-      RETURNING
-        VALUE(rv_exists) TYPE abap_bool.
+    DATA mi_linear TYPE REF TO zcl_wasm_memory_linear.
 
 ************* TABLES
     METHODS table_add
@@ -63,7 +50,7 @@ CLASS zcl_wasm_memory DEFINITION
 
     METHODS table_size
       IMPORTING
-        iv_tableidx TYPE i
+        iv_tableidx    TYPE i
       RETURNING
         VALUE(rv_size) TYPE i
       RAISING
@@ -71,10 +58,10 @@ CLASS zcl_wasm_memory DEFINITION
 
     METHODS table_get
       IMPORTING
-        iv_tableidx TYPE i
-        iv_offset   TYPE i
+        iv_tableidx     TYPE i
+        iv_offset       TYPE i
       RETURNING
-        VALUE(ri_value)    TYPE REF TO zif_wasm_value
+        VALUE(ri_value) TYPE REF TO zif_wasm_value
       RAISING
         zcx_wasm.
 
@@ -88,18 +75,17 @@ CLASS zcl_wasm_memory DEFINITION
 
     METHODS table_get_max
       IMPORTING
-        iv_tableidx TYPE i
+        iv_tableidx   TYPE i
       RETURNING
         VALUE(rv_max) TYPE i
       RAISING
         zcx_wasm.
 
   PROTECTED SECTION.
-    DATA mi_linear TYPE REF TO zif_wasm_memory_linear.
     DATA mi_globals TYPE REF TO zif_wasm_memory_globals.
 
     DATA mt_stack  TYPE STANDARD TABLE OF REF TO zif_wasm_value WITH DEFAULT KEY.
-    DATA mt_frames TYPE STANDARD TABLE OF REF TO zif_wasm_memory_frame WITH DEFAULT KEY.
+    DATA mt_frames TYPE STANDARD TABLE OF ty_locals WITH DEFAULT KEY.
 
     TYPES: BEGIN OF ty_table,
              type     TYPE zcl_wasm_table_section=>ty_table,
@@ -224,12 +210,12 @@ CLASS zcl_wasm_memory IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD push_frame.
-    DATA(lo_frame) = NEW zcl_wasm_memory_frame( ).
-    APPEND lo_frame TO mt_frames.
+  METHOD push_locals.
+    APPEND mt_locals TO mt_frames.
+    CLEAR mt_locals.
   ENDMETHOD.
 
-  METHOD pop_frame.
+  METHOD pop_locals.
     DATA lv_last TYPE i.
     lv_last = lines( mt_frames ).
     "##feature-start=debug
@@ -237,34 +223,9 @@ CLASS zcl_wasm_memory IMPLEMENTATION.
       RAISE EXCEPTION TYPE zcx_wasm EXPORTING text = 'zcl_wasm_memory: no frames, pop'.
     ENDIF.
     "##feature-end=debug
+
+    READ TABLE mt_frames INTO mt_locals INDEX lv_last.
     DELETE mt_frames INDEX lv_last.
-  ENDMETHOD.
-
-  METHOD get_frame.
-    DATA lv_last TYPE i.
-    lv_last = lines( mt_frames ).
-    READ TABLE mt_frames INDEX lv_last INTO ri_frame.
-    "##feature-start=debug
-    IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE zcx_wasm EXPORTING text = 'zcl_wasm_memory: no frames, get'.
-    ENDIF.
-    "##feature-end=debug
-  ENDMETHOD.
-
-  METHOD get_linear.
-    IF mi_linear IS INITIAL.
-      RAISE EXCEPTION TYPE zcx_wasm EXPORTING text = 'zcl_wasm_memory: no linear memory'.
-    ENDIF.
-
-    ri_linear = mi_linear.
-  ENDMETHOD.
-
-  METHOD has_linear.
-    rv_exists = xsdbool( mi_linear IS NOT INITIAL ).
-  ENDMETHOD.
-
-  METHOD set_linear.
-    mi_linear = ii_linear.
   ENDMETHOD.
 
 ENDCLASS.
